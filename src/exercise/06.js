@@ -14,13 +14,29 @@ const pending = 'pending'
 const resolved = 'resolved'
 const rejected = 'rejected'
 
-function Error({error}) {
+function ErrorMessage({error}) {
   return (
     <div role="alert">
       There was an error:{' '}
       <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
     </div>
   )
+}
+
+class ErrorBoundry extends React.Component {
+  state = {error: null}
+
+  static getDerivedStateFromError(error) {
+    return {error}
+  }
+
+  render() {
+    const {error} = this.state
+
+    if (error) return <this.props.FallbackComponent error={error} />
+
+    return this.props.children
+  }
 }
 
 function PokemonInfo({pokemonName}) {
@@ -48,12 +64,11 @@ function PokemonInfo({pokemonName}) {
   const {pokemon, error, status} = state
 
   if (status === idle) return 'Submit a pokemon'
+  else if (status === pending) return <PokemonInfoFallback name={pokemonName} />
+  else if (status === rejected) throw error
+  else if (status === resolved) return <PokemonDataView pokemon={pokemon} />
 
-  if (status === pending) return <PokemonInfoFallback name={pokemonName} />
-
-  if (status === resolved) return <PokemonDataView pokemon={pokemon} />
-
-  if (status === rejected) return <Error error={error} />
+  throw new Error('Something went terribly wrong')
 }
 
 function App() {
@@ -68,7 +83,13 @@ function App() {
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
       <div className="pokemon-info">
-        <PokemonInfo pokemonName={pokemonName} />
+        <ErrorBoundry
+          FallbackComponent={ErrorMessage}
+          key={pokemonName}
+          // resetKeys={[pokemonName]}
+        >
+          <PokemonInfo pokemonName={pokemonName} />
+        </ErrorBoundry>
       </div>
     </div>
   )
