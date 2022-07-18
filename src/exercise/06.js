@@ -25,27 +25,27 @@ function Error({error}) {
 
 function PokemonInfo({pokemonName}) {
   const noPokemonName = pokemonName === ''
-  const [pokemon, setPokemon] = React.useState(null)
-  const [error, setError] = React.useState(null)
-  const [status, setStatus] = React.useState(idle)
+  const [state, setState] = React.useState({
+    pokemon: null,
+    error: null,
+    status: idle,
+  })
 
   React.useEffect(() => {
     if (noPokemonName) return
 
-    setPokemon(null)
-    setStatus(pending)
+    setState({pokemon: null, status: pending})
 
     fetchPokemon(pokemonName)
-      .then(pokemonData => {
-        setPokemon(pokemonData)
-        setStatus(resolved)
-        setError(null)
+      .then(pokemon => {
+        setState({pokemon, status: resolved, error: null})
       })
       .catch(error => {
-        setStatus(rejected)
-        setError(error)
+        setState({status: rejected, error})
       })
   }, [pokemonName, noPokemonName])
+
+  const {pokemon, error, status} = state
 
   if (status === idle) return 'Submit a pokemon'
 
