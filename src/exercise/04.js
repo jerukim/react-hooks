@@ -4,32 +4,10 @@
 import * as React from 'react'
 import {useLocalStorageState} from '../hooks'
 
-function Board() {
-  const [squares, setSquares] = useLocalStorageState(
-    'squares',
-    Array(9).fill(null),
-  )
-
-  const nextValue = calculateNextValue(squares)
-  const winner = calculateWinner(squares)
-  const status = calculateStatus(winner, squares, nextValue)
-
-  function selectSquare(square) {
-    if (winner || squares[square]) return
-
-    const squaresCopy = [...squares]
-    squaresCopy[square] = nextValue
-
-    setSquares(squaresCopy)
-  }
-
-  function restart() {
-    setSquares(Array(9).fill(null))
-  }
-
+function Board({squares, onClick}) {
   function renderSquare(i) {
     return (
-      <button className="square" onClick={() => selectSquare(i)}>
+      <button className="square" onClick={() => onClick(i)}>
         {squares[i]}
       </button>
     )
@@ -37,7 +15,6 @@ function Board() {
 
   return (
     <div>
-      <div className="status">{status}</div>
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
@@ -53,21 +30,80 @@ function Board() {
         {renderSquare(7)}
         {renderSquare(8)}
       </div>
-      <button className="restart" onClick={restart}>
-        restart
-      </button>
     </div>
   )
 }
 
 function Game() {
+  const [squares, setSquares] = useLocalStorageState(
+    'squares',
+    generateEmptyBoard(),
+  )
+
+  const [moves, setMoves] = useLocalStorageState('moves', [
+    generateEmptyBoard(),
+  ])
+
+  const [currentStep, setCurrentStep] = useLocalStorageState('currentStep', 0)
+
+  const nextValue = calculateNextValue(squares)
+  const winner = calculateWinner(squares)
+  const status = calculateStatus(winner, squares, nextValue)
+
+  function selectSquare(square) {
+    if (winner || squares[square]) return
+
+    const squaresCopy = [...squares]
+    squaresCopy[square] = nextValue
+
+    setSquares(squaresCopy)
+    setCurrentStep(previousState => previousState + 1)
+
+    setMoves([...moves, squaresCopy])
+  }
+
+  function restart() {
+    setSquares(generateEmptyBoard())
+    setMoves([generateEmptyBoard()])
+    setCurrentStep(0)
+  }
+
   return (
     <div className="game">
       <div className="game-board">
-        <Board />
+        <Board squares={squares} onClick={selectSquare} />
+        <button className="restart" onClick={restart}>
+          restart
+        </button>
+      </div>
+      <div className="game-info">
+        <div className="status">{status}</div>
+        <ol>
+          {moves.map((move, i) => {
+            const isCurrent = currentStep === i
+            return (
+              <li key={i}>
+                <button
+                  disabled={isCurrent}
+                  onClick={() => {
+                    setSquares(move)
+                    setCurrentStep(i)
+                  }}
+                >
+                  Go to {i === 0 ? 'game start' : `move #${i}`}{' '}
+                  {isCurrent && '(current)'}
+                </button>
+              </li>
+            )
+          })}
+        </ol>
       </div>
     </div>
   )
+}
+
+function generateEmptyBoard() {
+  return Array(9).fill(null)
 }
 
 // eslint-disable-next-line no-unused-vars
