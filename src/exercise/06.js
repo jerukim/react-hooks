@@ -28,9 +28,9 @@ function ErrorFallback({error, resetErrorBoundary}) {
 function PokemonInfo({pokemonName}) {
   const noPokemonName = pokemonName === ''
   const [state, setState] = React.useState({
+    status: pokemonName ? pending : idle,
     pokemon: null,
     error: null,
-    status: idle,
   })
 
   React.useEffect(() => {
