@@ -12,18 +12,26 @@ import {
 function PokemonInfo({pokemonName}) {
   const noPokemonName = pokemonName === ''
   const [pokemon, setPokemon] = React.useState(null)
+  const [error, setError] = React.useState(null)
 
   React.useEffect(() => {
     if (noPokemonName) return
 
     setPokemon(null)
-    fetchPokemon(pokemonName).then(setPokemon)
+    fetchPokemon(pokemonName).then(setPokemon).catch(setError)
   }, [pokemonName, noPokemonName])
 
   if (noPokemonName) return 'Submit a pokemon'
 
-  if (!noPokemonName && !pokemon)
-    return <PokemonInfoFallback name={pokemonName} />
+  if (error)
+    return (
+      <div role="alert">
+        There was an error:{' '}
+        <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+      </div>
+    )
+
+  if (!pokemon) return <PokemonInfoFallback name={pokemonName} />
 
   if (pokemon) return <PokemonDataView pokemon={pokemon} />
 }
