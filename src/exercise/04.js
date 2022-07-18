@@ -40,7 +40,7 @@ function Game() {
     generateEmptyBoard(),
   )
 
-  const [moves, setMoves] = useLocalStorageState('moves', [
+  const [history, setHistory] = useLocalStorageState('history', [
     generateEmptyBoard(),
   ])
 
@@ -58,13 +58,16 @@ function Game() {
 
     setSquares(squaresCopy)
     setCurrentStep(previousState => previousState + 1)
-
-    setMoves([...moves, squaresCopy])
+    setHistory(history =>
+      currentStep + 1 === history.length
+        ? [...history, squaresCopy]
+        : [...history.slice(0, currentStep + 1), squaresCopy],
+    )
   }
 
   function restart() {
     setSquares(generateEmptyBoard())
-    setMoves([generateEmptyBoard()])
+    setHistory([generateEmptyBoard()])
     setCurrentStep(0)
   }
 
@@ -79,7 +82,7 @@ function Game() {
       <div className="game-info">
         <div className="status">{status}</div>
         <ol>
-          {moves.map((move, i) => {
+          {history.map((move, i) => {
             const isCurrent = currentStep === i
             return (
               <li key={i}>
